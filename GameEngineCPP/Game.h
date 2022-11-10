@@ -1,4 +1,6 @@
 #pragma once
+#include <vector>
+
 #include "include/SDL_stdinc.h"
 
 struct Vector2
@@ -19,6 +21,8 @@ public:
 	void RunLoop();
 
 	void Shutdown();
+
+	void AddActor(class Actor* actor);
 
 private:
 
@@ -49,6 +53,11 @@ private:
 	float mPaddleVel;
 
 	float paddleH;
+
+	std::vector<Actor*> mActors;
 	
+	std::vector<Actor*> mPendindActors;
+	
+	bool mUpdatingActors;
 };
 

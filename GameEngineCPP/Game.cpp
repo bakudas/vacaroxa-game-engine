@@ -1,5 +1,7 @@
 #include "Game.h"
+#include "Actor.h"
 #include "include/SDL.h"
+
 
 Game::Game() 
 {
@@ -62,11 +64,29 @@ bool Game::Initialize()
 
 void Game::Shutdown()
 {
+	while (!mActors.empty())
+	{
+		delete mActors.back();
+	}
+	
 	SDL_DestroyWindow(mWindow);
 
 	SDL_DestroyRenderer(mRenderer);
 
 	SDL_Quit();
+}
+
+void Game::AddActor(Actor* actor)
+{
+	// se ao atualizar os actors, for preciso add para pendente
+	if (mUpdatingActors)
+	{
+		mPendindActors.emplace_back(actor);
+	}
+	else
+	{
+		mActors.emplace_back(actor);
+	}
 }
 
 
@@ -131,6 +151,43 @@ void Game::UpdateGame()
 	// Atualiza a contagem de tick (para o próximo frame)
 	mTicksCount = SDL_GetTicks();
 
+	
+	// Atualiza todos os Actors
+	mUpdatingActors = true;
+
+	for (auto actor : mActors)
+	{
+		actor->Update(deltatime);
+	}
+
+	mUpdatingActors = false;
+
+	// Mover qualquer Actor pendente para vector mActors
+	for (auto pending:mPendindActors)
+	{
+		mActors.emplace_back(pending);
+	}
+
+	mPendindActors.clear();
+
+	// Move qualquer Actor morto para um vector temporário
+	std::vector<Actor*> deadActors;
+
+	for (auto actor : mActors)
+	{
+		if (actor->GetState() == Actor::EDead)
+		{
+			deadActors.emplace_back(actor);	
+		}
+	}
+
+	// Deleta os dead Actors
+	for (auto actor : deadActors)
+	{
+		delete actor;
+	}
+
+	
 	// controla o paddle esquerdo
 	if (mPaddleDir != 0)
 	{
